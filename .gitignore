@@ -31,3 +31,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+Set-Content .gitignore "node_modules`n.next`n.env.local`n.env`nbuild`ndist"
