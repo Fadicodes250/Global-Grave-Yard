@@ -31,6 +31,7 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [camera, setCamera] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [lastPointerDown, setLastPointerDown] = useState(0);
@@ -47,13 +48,14 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
   
   // Movement tracking for click/drag disambiguation
   const totalMove = useRef(0);
+  const lastTapRef = useRef<number>(0);
 
   // Refs for animation loop access
   const gravesRef = useRef(graves);
   gravesRef.current = graves;
   
-  const cameraRef = useRef(camera);
-  cameraRef.current = camera;
+  const cameraRef = useRef({ ...camera, zoom });
+  cameraRef.current = { ...camera, zoom };
 
   const particlesRef = useRef<Particle[]>([]);
   const trailParticlesRef = useRef<{x: number, y: number, vx: number, vy: number, life: number}[]>([]);
@@ -71,8 +73,7 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
         .single();
       if (topData) setTopGrave(topData);
 
-      // 2. Get Nearest 3.5+ Grave (limited search radius or global order by dist)
-      // Since we don't have PostGIS, we'll just grab top 50 highly rated and find nearest in JS
+      // 2. Get Nearest 3.5+ Grave
       const { data: honoredData } = await supabase
         .from("graves")
         .select("*")
@@ -91,8 +92,8 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
           const dy = g.y_coord - camera.y;
           const d = Math.sqrt(dx*dx + dy*dy);
           
-          // Must be off-screen
-          const isOffScreen = Math.abs(dx) > width/2 || Math.abs(dy) > height/2;
+          // Must be off-screen (account for zoom)
+          const isOffScreen = Math.abs(dx) > (width/2)/zoom || Math.abs(dy) > (height/2)/zoom;
           
           if (isOffScreen && d < minDist) {
             minDist = d;
@@ -106,7 +107,30 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
     discoverHonored();
     const interval = setInterval(discoverHonored, 5000);
     return () => clearInterval(interval);
-  }, [camera.x, camera.y]);
+  }, [camera.x, camera.y, zoom]);
+
+  // Fetch Graves based on viewport
+  useEffect(() => {
+    const fetchGraves = async () => {
+      // Scale fetch range inversely with zoom (wider range when zoomed out)
+      const range = 2000 / Math.pow(zoom, 0.5); 
+      const { data, error } = await supabase
+        .from("graves")
+        .select("*")
+        .gte("x_coord", camera.x - range)
+        .lte("x_coord", camera.x + range)
+        .gte("y_coord", camera.y - range)
+        .lte("y_coord", camera.y + range);
+
+      if (!error && data) {
+        setGraves(data as Grave[]);
+      }
+    };
+
+    fetchGraves();
+    const interval = setInterval(fetchGraves, 10000);
+    return () => clearInterval(interval);
+  }, [camera.x, camera.y, zoom]);
 
   // RequestAnimationFrame Render Loop
   useEffect(() => {
@@ -118,12 +142,17 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
     let animationFrameId: number;
 
     const render = () => {
-      const width = canvas.width;
-      const height = canvas.height;
+      const dpr = window.devicePixelRatio || 1;
+      const width = canvas.width / dpr;
+      const height = canvas.height / dpr;
       const cx = cameraRef.current.x;
       const cy = cameraRef.current.y;
+      const z = cameraRef.current.zoom;
 
-      ctx.clearRect(0, 0, width, height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.save();
+      ctx.scale(dpr, dpr);
 
       // 1. Draw Static Background Gradients
       const bgGrad = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, width);
@@ -133,17 +162,19 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
       ctx.fillRect(0, 0, width, height);
       
       ctx.save();
-      ctx.translate(width / 2 - cx, height / 2 - cy);
+      ctx.translate(width / 2, height / 2);
+      ctx.scale(z, z);
+      ctx.translate(-cx, -cy);
 
       // 2. Grid & Soul Orbs logic
-      const gridSize = 140; // Slightly larger grid for cleaner look
-      const startX = Math.floor((cx - width / 2) / gridSize) * gridSize;
-      const endX = Math.ceil((cx + width / 2) / gridSize) * gridSize;
-      const startY = Math.floor((cy - height / 2) / gridSize) * gridSize;
-      const endY = Math.ceil((cy + height / 2) / gridSize) * gridSize;
+      const gridSize = 140; 
+      const startX = Math.floor((cx - (width / 2) / z) / gridSize) * gridSize;
+      const endX = Math.ceil((cx + (width / 2) / z) / gridSize) * gridSize;
+      const startY = Math.floor((cy - (height / 2) / z) / gridSize) * gridSize;
+      const endY = Math.ceil((cy + (height / 2) / z) / gridSize) * gridSize;
 
-      ctx.strokeStyle = "rgba(209, 209, 209, 0.08)"; // Increased visibility
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(209, 209, 209, 0.08)";
+      ctx.lineWidth = 1 / z; // Keep lines thin when zoomed in
       ctx.beginPath();
       for (let x = startX; x <= endX; x += gridSize) {
         ctx.moveTo(x, startY);
@@ -161,33 +192,33 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
         let y = grave.y_coord;
         const avg = grave.rating_avg;
 
-        const worldMouseX = (mousePos.current.x - width / 2) + cx;
-        const worldMouseY = (mousePos.current.y - height / 2) + cy;
+        // Interaction logic
+        const worldMouseX = (mousePos.current.x - width / 2) / z + cx;
+        const worldMouseY = (mousePos.current.y - height / 2) / z + cy;
         const dx = worldMouseX - x;
         const dy = worldMouseY - y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         
-        if (dist < 250) { // Larger interaction radius
-          const pull = (1 - dist / 250) * 12;
+        if (dist < 250 / z) { 
+          const pull = (1 - dist / (250 / z)) * (12 / z);
           x += (dx / dist) * pull;
           y += (dy / dist) * pull;
         }
 
-        const baseRadius = 2.5; // Bigger dots
+        const baseRadius = 2.5 / Math.sqrt(z); // Stabilize size
         const pulse = Math.sin(time / 800 + (x * 0.02)) * 0.4 + 0.6; 
         const flicker = Math.random() > 0.97 ? Math.random() * 0.5 : 1; 
         
         const isGold = avg >= 4;
         const colorBase = isGold ? "255, 215, 0" : "74, 144, 226";
         
-        // Bigger glow
         let glowSize = (12 + (avg * 5)) * pulse * flicker;
         if (glowSize > 60) glowSize = 60;
 
         ctx.beginPath();
         ctx.arc(x, y, baseRadius, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(255, 255, 255, ${0.9 * flicker})`;
-        ctx.shadowBlur = glowSize / 2;
+        ctx.shadowBlur = (glowSize / 2) * z;
         ctx.shadowColor = `rgba(${colorBase}, 0.6)`;
         ctx.fill();
 
@@ -214,19 +245,18 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
           continue;
         }
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.life * 2.5, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.life * (2.5 / z), 0, Math.PI * 2);
         ctx.fillStyle = p.color;
-        ctx.shadowBlur = p.life * 15;
+        ctx.shadowBlur = p.life * 15 * z;
         ctx.shadowColor = p.color;
         ctx.fill();
         ctx.shadowBlur = 0;
       }
 
-      ctx.restore();
+      ctx.restore(); // Back to screen space for trail and fog
 
       // 4. Ghostly Trail (The Trail)
       if (topGrave) {
-        // Emit trail particles occasionally
         if (Math.random() > 0.94) {
           const dx = topGrave.x_coord - cx;
           const dy = topGrave.y_coord - cy;
@@ -263,7 +293,7 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
         }
       }
 
-      // 5. Draw Drifting Fog logic ...
+      // 5. Draw Drifting Fog
       fogRef.current.forEach(f => {
         f.x += f.speed;
         if (f.x > width + f.size) f.x = -f.size;
@@ -275,21 +305,26 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
         ctx.fillRect(f.x - f.size, f.y - f.size, f.size * 2, f.size * 2);
       });
 
+      ctx.restore(); // End DPR scale
+
       animationFrameId = requestAnimationFrame(render);
     };
 
     render();
     return () => cancelAnimationFrame(animationFrameId);
-  }, [topGrave]); // Re-bind trail when topGrave changes
+  }, [topGrave]); 
 
-  // Handle Resize ...
+  // Handle Resize & DPI
   useEffect(() => {
     const handleResize = () => {
       if (canvasRef.current && containerRef.current) {
-        canvasRef.current.width = containerRef.current.clientWidth;
-        canvasRef.current.height = containerRef.current.clientHeight;
+        const dpr = window.devicePixelRatio || 1;
+        const rect = containerRef.current.getBoundingClientRect();
+        canvasRef.current.width = rect.width * dpr;
+        canvasRef.current.height = rect.height * dpr;
+        // Fog positioning
         fogRef.current.forEach(f => {
-          f.y = Math.random() * canvasRef.current!.height;
+          f.y = Math.random() * rect.height;
         });
       }
     };
@@ -298,18 +333,62 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Native Zoom Handlers (Wheel & Pinch)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let initialDist = 0;
+    let initialZoom = 1;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.92 : 1.08;
+      setZoom(prev => Math.min(Math.max(prev * delta, 0.1), 3));
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        initialDist = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        initialZoom = zoom;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dist = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        const delta = dist / initialDist;
+        setZoom(Math.min(Math.max(initialZoom * delta, 0.1), 3));
+      }
+    };
+
+    container.addEventListener("wheel", handleWheel, { passive: false });
+    container.addEventListener("touchstart", handleTouchStart);
+    container.addEventListener("touchmove", handleTouchMove, { passive: false });
+
+    return () => {
+      container.removeEventListener("wheel", handleWheel);
+      container.removeEventListener("touchstart", handleTouchStart);
+      container.removeEventListener("touchmove", handleTouchMove);
+    };
+  }, [zoom]);
+
   // Spatial helper ...
   const findGraveAt = (worldX: number, worldY: number) => {
-    const threshold = 20; 
+    const threshold = 25 / cameraRef.current.zoom; 
     return gravesRef.current.find(g => {
       const dx = g.x_coord - worldX;
       const dy = g.y_coord - worldY;
       return Math.sqrt(dx*dx + dy*dy) < threshold;
     });
   };
-
-
-  const lastTapRef = useRef<number>(0);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (modalState.isOpen || selectedGrave) return;
@@ -326,7 +405,12 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
     const dx = e.clientX - dragStart.x;
     const dy = e.clientY - dragStart.y;
     totalMove.current += Math.sqrt(dx * dx + dy * dy); 
-    setCamera((prev) => ({ x: prev.x - dx, y: prev.y - dy }));
+    
+    // Panning should be inversely proportional to zoom
+    setCamera((prev) => ({ 
+      x: prev.x - dx / zoom, 
+      y: prev.y - dy / zoom 
+    }));
     setDragStart({ x: e.clientX, y: e.clientY });
   };
 
@@ -335,17 +419,16 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
     const timeSinceDown = now - lastPointerDown;
     const timeSinceLastTap = now - lastTapRef.current;
     
-    // threshold of 25px for "stable" tap, especially for mobile fingers
     if (totalMove.current < 25 && timeSinceDown < 350) {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
-      const worldX = (e.clientX - rect.left - containerRef.current.clientWidth / 2) + camera.x;
-      const worldY = (e.clientY - rect.top - containerRef.current.clientHeight / 2) + camera.y;
+      const worldX = (e.clientX - rect.left - containerRef.current.clientWidth / 2) / zoom + camera.x;
+      const worldY = (e.clientY - rect.top - containerRef.current.clientHeight / 2) / zoom + camera.y;
 
       // Handle Double Tap (Manual)
-      if (timeSinceLastTap < 400) {
+      if (timeSinceLastTap < 450) {
         setModalState({ isOpen: true, x: worldX, y: worldY });
-        lastTapRef.current = 0; // Reset
+        lastTapRef.current = 0; 
       } else {
         // Handle Single Tap (Read)
         const grave = findGraveAt(worldX, worldY);
