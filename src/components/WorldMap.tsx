@@ -215,13 +215,16 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
         let glowSize = (12 + (avg * 5)) * pulse * flicker;
         if (glowSize > 60) glowSize = 60;
 
-        // Rating Hint (only when zoomed in enough or highly rated)
+        // Rating Hint (more visible)
         if (avg > 0 && (z > 0.6 || avg >= 4)) {
           ctx.save();
-          ctx.font = `${Math.max(7, 9 / z)}px monospace`;
-          ctx.fillStyle = `rgba(${colorBase}, ${0.3 * pulse * flicker})`;
+          const labelSize = Math.max(8, 11 / z); 
+          ctx.font = `${labelSize}px monospace`;
+          ctx.fillStyle = `rgba(255, 255, 255, ${0.8 * pulse * flicker})`; // Stronger white
+          ctx.shadowBlur = 4 * z;
+          ctx.shadowColor = `rgba(${colorBase}, 0.8)`; // Stronger glow color behind text
           ctx.textAlign = "center";
-          ctx.fillText(`${avg.toFixed(1)}★`, x, y - (baseRadius + 12));
+          ctx.fillText(`${avg.toFixed(1)}★`, x, y - (baseRadius + 14));
           ctx.restore();
         }
 
