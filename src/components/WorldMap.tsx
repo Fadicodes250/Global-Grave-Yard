@@ -207,7 +207,11 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
 
         const baseRadius = 3.5 / Math.sqrt(z); // Slightly bigger dots
         const pulse = Math.sin(time / 800 + (x * 0.02)) * 0.4 + 0.6; 
-        const flicker = Math.random() > 0.97 ? Math.random() * 0.5 : 1; 
+        
+        // Rating-scaled flicker: Higher rating = more frequent and intense "glitches"
+        const flickerChance = 0.985 - (avg * 0.005); // 0.985 (0 starts) to 0.96 (5 starts)
+        const flickerIntensity = 0.6 - (avg * 0.08); // 0.6 (0 starts) to 0.2 (5 starts)
+        const flicker = Math.random() > flickerChance ? Math.random() * flickerIntensity : 1; 
         
         const isGold = avg >= 4;
         const colorBase = isGold ? "255, 215, 0" : "74, 144, 226";
