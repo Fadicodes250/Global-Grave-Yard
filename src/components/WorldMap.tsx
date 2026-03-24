@@ -209,17 +209,21 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
         const baseRadius = 3.5 / Math.sqrt(z); // Slightly bigger dots
         const pulse = Math.sin(time / 800 + (x * 0.02)) * 0.4 + 0.6; 
         
+        // Visual clamping for extreme ratings (like the user-added 1000 stars)
+        const displayAvg = Math.min(5, Math.max(0, avg));
+        const glowAvg = Math.min(20, Math.max(0, avg)); // Allow extra glow for high stats
+        
         // Rating-scaled flicker: Higher rating = more frequent and intense "glitches"
-        const flickerChance = 0.985 - (avg * 0.005); // 0.985 (0 starts) to 0.96 (5 starts)
-        const flickerIntensity = 0.6 - (avg * 0.08); // 0.6 (0 starts) to 0.2 (5 starts)
+        const flickerChance = 0.985 - (displayAvg * 0.005); 
+        const flickerIntensity = 0.6 - (displayAvg * 0.08); 
         const flicker = Math.random() > flickerChance ? Math.random() * flickerIntensity : 1; 
         
         const isGold = avg >= 4;
         const colorBase = isGold ? "255, 215, 0" : "74, 144, 226";
         
-        let glowSize = (12 + (avg * 5)) * pulse * flicker;
+        let glowSize = (12 + (glowAvg * 5)) * pulse * flicker;
         if (isNaN(glowSize) || glowSize < 0.1) glowSize = 0.1;
-        if (glowSize > 60) glowSize = 60;
+        if (glowSize > 120) glowSize = 120; // Allow 1000-star orbs to be twice as big (max 120)
 
         // Rating Hint (more visible)
         if (avg > 0 && (z > 0.6 || avg >= 4)) {
