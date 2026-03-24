@@ -80,7 +80,7 @@ export default function GuidePage() {
             transition={{ duration: 1.2, delay: 0.3 }}
             className="font-serif text-xl opacity-60 italic"
           >
-            A guide for those who wish to remain, and those who seek to honor.
+            A simple guide for sharing your story and honoring others.
           </motion.p>
         </section>
 
@@ -89,29 +89,29 @@ export default function GuidePage() {
           <RitualCard 
             delay={0.1}
             icon={MousePointer2}
-            title="The Burial"
-            description="Find a quiet corner in the field. Double-click the void to manifest a soul orb. Every inscription you leave is an anonymous fragment of the truth, etched forever into the digital soil."
+            title="How to Bury"
+            description="Find an empty spot on the map. Double-click to create a new light. Anything you write is anonymous and will stay here forever."
           />
           <RitualCard 
             delay={0.2}
             orbColor="255, 215, 0"
             icon={Compass}
             title="The Compass"
-            description="The floating needle in the shadow guides you toward the 'Most Honored' burials—those with high community ratings. Follow the fading trail of dust to find souls that resonated deeply with others."
+            description="The small needle at the top left points toward the most liked memories. Follow the trail of dust to find the lights that people loved the most."
           />
           <RitualCard 
             delay={0.3}
             orbColor="255, 255, 255"
             icon={Star}
-            title="Star Tributes"
-            description="Respect is personal. Use the 5-star rating system to honor a burial. Highly rated soul orbs will transition from a cold, distant blue to an intense, flickering gold/white glow."
+            title="Give Stars"
+            description="If you like someone's message, give it stars. Highly rated lights will change from blue to a bright gold or white glow."
           />
           <RitualCard 
             delay={0.4}
             orbColor="255, 100, 100"
             icon={Flame}
-            title="Tending"
-            description="A grave only exists as long as it is remembered. Frequent visits and ratings keep a soul orb from fading into the deep fog. Tend to the field, for the void is always encroaching."
+            title="Tend the Field"
+            description="Messages stay alive when people visit them. Frequent visits and ratings keep the lights from fading away into the fog. Keep exploring to keep the memories alive."
           />
         </div>
 

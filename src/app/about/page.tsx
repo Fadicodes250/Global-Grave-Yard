@@ -38,27 +38,25 @@ export default function AboutPage() {
             transition={{ duration: 1.5, ease: "easeOut" }}
             className="font-serif text-4xl sm:text-6xl md:text-7xl font-light tracking-wide leading-tight text-white"
           >
-            A Monument to What <br /> We Leave Behind.
+            A Place to Leave <br /> Your Thoughts.
           </motion.h1>
         </section>
 
         {/* Intent Body */}
         <section className="space-y-16 font-serif text-lg sm:text-xl md:text-2xl leading-relaxed opacity-90">
           <FadeInText>
-            The Global Graveyard is not a place of mourning, but a digital sanctuary for anonymous vulnerability. 
-            In an era of performative permanence, we offer a space where the ephemeral can be etched into the void.
+            The Global Graveyard is a safe place to share your secrets anonymously. 
+            In a world where everything is public, we give you a space where your private thoughts can stay forever.
           </FadeInText>
 
           <FadeInText delay={0.2}>
-            Every soul orb you see drifting on "The Field" is a fragment of a real human thought—a regret, a hope, 
-            or a quiet admission of existence. By placing a marker, you are not just leaving a message; you are 
-            claiming a coordinate in the collective consciousness of our digital era.
+            Every light you see on "The Field" is a real memory or feeling from someone like you—a regret, a hope, 
+            or just a small note to say they were here. By adding your own, you are marking your spot in this digital world.
           </FadeInText>
 
           <FadeInText delay={0.4}>
-            We invite you to wander. To read the echoes of those who came before you. To tend to the plots that 
-            resonate with your own silence. Here, anonymity is the catalyst for truth, and distance is the bridge 
-            to connection.
+            We invite you to explore. Read the messages left by others. Highlighting the ones that mean something to you. 
+            Being anonymous makes it easier to be honest, and reading others helps us feel less alone.
           </FadeInText>
         </section>
 
@@ -81,10 +79,10 @@ export default function AboutPage() {
 
           <FadeInText delay={0.2}>
             <p className="font-serif italic text-xl sm:text-2xl text-white/80 leading-relaxed">
-              "My intention was to build a mirror for the interior world. In the physical realm, we are bounded by 
-              gravity and time. In this digital field, we are only bounded by the reach of our vulnerability. 
-              The Global Graveyard is an experiment in digital permanence—a reminder that while we may fade, 
-              our impact on the void remains, pulsing like a dying candle in the dark."
+              "I wanted to build a place that reflects our inner feelings. In the real world, we are limited by 
+              time. Here, we are only limited by how honest we want to be. 
+              The Global Graveyard is a reminder that even if we fade away, 
+              the things we felt and shared will still be here, shining in the dark."
             </p>
           </FadeInText>
 
