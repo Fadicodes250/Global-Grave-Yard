@@ -155,7 +155,8 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
       ctx.scale(dpr, dpr);
 
       // 1. Draw Static Background Gradients
-      const bgGrad = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, width);
+      const safeWidth = Math.max(0.1, width);
+      const bgGrad = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, safeWidth);
       bgGrad.addColorStop(0, "#080808");
       bgGrad.addColorStop(1, "#020202");
       ctx.fillStyle = bgGrad;
@@ -217,6 +218,7 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
         const colorBase = isGold ? "255, 215, 0" : "74, 144, 226";
         
         let glowSize = (12 + (avg * 5)) * pulse * flicker;
+        if (isNaN(glowSize) || glowSize < 0.1) glowSize = 0.1;
         if (glowSize > 60) glowSize = 60;
 
         // Rating Hint (more visible)
@@ -224,9 +226,9 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
           ctx.save();
           const labelSize = Math.max(8, 11 / z); 
           ctx.font = `${labelSize}px monospace`;
-          ctx.fillStyle = `rgba(255, 255, 255, ${0.8 * pulse * flicker})`; // Stronger white
+          ctx.fillStyle = `rgba(255, 255, 255, ${0.8 * pulse * flicker})`; 
           ctx.shadowBlur = 4 * z;
-          ctx.shadowColor = `rgba(${colorBase}, 0.8)`; // Stronger glow color behind text
+          ctx.shadowColor = `rgba(${colorBase}, 0.8)`; 
           ctx.textAlign = "center";
           ctx.fillText(`${avg.toFixed(1)}★`, x, y - (baseRadius + 14));
           ctx.restore();
@@ -239,7 +241,7 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
         ctx.shadowColor = `rgba(${colorBase}, 0.6)`;
         ctx.fill();
 
-        const orbGrad = ctx.createRadialGradient(x, y, 0, x, y, glowSize);
+        const orbGrad = ctx.createRadialGradient(x, y, 0.1, x, y, glowSize);
         orbGrad.addColorStop(0, `rgba(${colorBase}, ${0.5 * pulse * flicker})`);
         orbGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
         
@@ -315,7 +317,9 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
         f.x += f.speed;
         if (f.x > width + f.size) f.x = -f.size;
         if (f.x < -f.size) f.x = width + f.size;
-        const fogGrad = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.size);
+        
+        const safeSize = Math.max(0.1, f.size);
+        const fogGrad = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, safeSize);
         fogGrad.addColorStop(0, `rgba(100, 100, 100, ${f.alpha})`);
         fogGrad.addColorStop(1, "rgba(100, 100, 100, 0)");
         ctx.fillStyle = fogGrad;
