@@ -32,7 +32,9 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
 
   const [camera, setCamera] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [targetZoom, setTargetZoom] = useState(1); // For smoothing
   const [isDragging, setIsDragging] = useState(false);
+  const [isPinching, setIsPinching] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [lastPointerDown, setLastPointerDown] = useState(0);
   const [graves, setGraves] = useState<Grave[]>([]);
@@ -60,6 +62,15 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
   const particlesRef = useRef<Particle[]>([]);
   const trailParticlesRef = useRef<{x: number, y: number, vx: number, vy: number, life: number}[]>([]);
   const fogRef = useRef<{ x: number, y: number, size: number, speed: number, alpha: number }[]>([]);
+
+  // Smooth Zoom Interpolation
+  useEffect(() => {
+    if (Math.abs(zoom - targetZoom) < 0.001) return;
+    const timeout = requestAnimationFrame(() => {
+      setZoom(prev => prev + (targetZoom - prev) * 0.15);
+    });
+    return () => cancelAnimationFrame(timeout);
+  }, [zoom, targetZoom]);
 
   // Discover Nearest Honored and Global Top
   useEffect(() => {
@@ -338,6 +349,7 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
     render();
     return () => cancelAnimationFrame(animationFrameId);
   }, [topGrave]); 
+ 
 
   // Handle Resize & DPI
   useEffect(() => {
@@ -369,16 +381,17 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       const delta = e.deltaY > 0 ? 0.92 : 1.08;
-      setZoom(prev => Math.min(Math.max(prev * delta, 0.1), 3));
+      setTargetZoom(prev => Math.min(Math.max(prev * delta, 0.1), 3));
     };
 
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
+        setIsPinching(true);
         initialDist = Math.hypot(
           e.touches[0].pageX - e.touches[1].pageX,
           e.touches[0].pageY - e.touches[1].pageY
         );
-        initialZoom = zoom;
+        initialZoom = targetZoom;
       }
     };
 
@@ -389,21 +402,34 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
           e.touches[0].pageX - e.touches[1].pageX,
           e.touches[0].pageY - e.touches[1].pageY
         );
+        // Safeguard against tiny initial distance
+        if (initialDist < 10) return;
+        
         const delta = dist / initialDist;
-        setZoom(Math.min(Math.max(initialZoom * delta, 0.1), 3));
+        // Dampen the zoom rate for touch
+        const touchZoom = initialZoom * Math.pow(delta, 1.2);
+        setTargetZoom(Math.min(Math.max(touchZoom, 0.1), 3));
       }
+    };
+
+    const handleTouchEnd = () => {
+      setIsPinching(false);
     };
 
     container.addEventListener("wheel", handleWheel, { passive: false });
     container.addEventListener("touchstart", handleTouchStart);
     container.addEventListener("touchmove", handleTouchMove, { passive: false });
+    container.addEventListener("touchend", handleTouchEnd);
+    container.addEventListener("touchcancel", handleTouchEnd);
 
     return () => {
       container.removeEventListener("wheel", handleWheel);
       container.removeEventListener("touchstart", handleTouchStart);
       container.removeEventListener("touchmove", handleTouchMove);
+      container.removeEventListener("touchend", handleTouchEnd);
+      container.removeEventListener("touchcancel", handleTouchEnd);
     };
-  }, [zoom]);
+  }, [targetZoom]);
 
   // Spatial helper ...
   const findGraveAt = (worldX: number, worldY: number) => {
@@ -416,7 +442,7 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (modalState.isOpen || selectedGrave) return;
+    if (modalState.isOpen || selectedGrave || isPinching) return;
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
     totalMove.current = 0;
@@ -426,7 +452,7 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
 
   const handlePointerMove = (e: React.PointerEvent) => {
     mousePos.current = { x: e.clientX, y: e.clientY };
-    if (!isDragging || modalState.isOpen || selectedGrave) return;
+    if (!isDragging || modalState.isOpen || selectedGrave || isPinching) return;
     const dx = e.clientX - dragStart.x;
     const dy = e.clientY - dragStart.y;
     totalMove.current += Math.sqrt(dx * dx + dy * dy); 
