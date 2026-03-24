@@ -205,7 +205,7 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
           y += (dy / dist) * pull;
         }
 
-        const baseRadius = 2.5 / Math.sqrt(z); // Stabilize size
+        const baseRadius = 3.5 / Math.sqrt(z); // Slightly bigger dots
         const pulse = Math.sin(time / 800 + (x * 0.02)) * 0.4 + 0.6; 
         const flicker = Math.random() > 0.97 ? Math.random() * 0.5 : 1; 
         
@@ -214,6 +214,16 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
         
         let glowSize = (12 + (avg * 5)) * pulse * flicker;
         if (glowSize > 60) glowSize = 60;
+
+        // Rating Hint (only when zoomed in enough or highly rated)
+        if (avg > 0 && (z > 0.6 || avg >= 4)) {
+          ctx.save();
+          ctx.font = `${Math.max(7, 9 / z)}px monospace`;
+          ctx.fillStyle = `rgba(${colorBase}, ${0.3 * pulse * flicker})`;
+          ctx.textAlign = "center";
+          ctx.fillText(`${avg.toFixed(1)}★`, x, y - (baseRadius + 12));
+          ctx.restore();
+        }
 
         ctx.beginPath();
         ctx.arc(x, y, baseRadius, 0, Math.PI * 2);

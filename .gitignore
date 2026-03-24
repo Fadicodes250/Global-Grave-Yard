@@ -32,3 +32,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 Set-Content .gitignore "node_modules`n.next`n.env.local`n.env`nbuild`ndist"
+Add native zoom, touch performance fixes, and high-DPI support
