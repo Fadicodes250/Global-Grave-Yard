@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import Navigation from "@/components/Navigation";
-import ContactSection from "@/components/ContactSection";
 import { useEffect, useState } from "react";
 
 const FadeInText = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => (
@@ -96,8 +95,6 @@ export default function AboutPage() {
             </div>
           </FadeInText>
         </section>
-        {/* Contact Section */}
-        <ContactSection />
       </main>
 
       {/* Atmospheric Background Noise/Fog (Optional CSS overlay) */}
