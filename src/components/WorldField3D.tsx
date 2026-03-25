@@ -1,5 +1,7 @@
 "use client";
 
+import React, { useRef, useState, useEffect } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { PointerLockControls, Stars, Html, Plane, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { supabase } from "@/lib/supabaseClient";
@@ -24,8 +26,9 @@ function GroundFog() {
     const t = state.clock.getElapsedTime();
     if (fogPlanes.current) {
       fogPlanes.current.children.forEach((child, i) => {
-        child.rotation.z = t * (0.02 + i * 0.01);
-        (child as any).material.opacity = 0.15 + Math.sin(t * 0.5 + i) * 0.05;
+        child.rotation.z = t * (0.01 + i * 0.005);
+        child.position.y = Math.sin(t * 0.2 + i) * 0.1;
+        (child as any).material.opacity = 0.1 + Math.sin(t * 0.4 + i) * 0.05;
       });
     }
   });
@@ -185,10 +188,10 @@ export default function WorldField3D({
         camera={{ position: [0, 1.7, 15], fov: 60 }}
         dpr={[1, 2]}
       >
-        <color attach="background" args={["#010101"]} />
-        <fogExp2 attach="fog" args={["#010101", 0.06]} />
+        <color attach="background" args={["#020202"]} />
+        <fogExp2 attach="fog" args={["#020202", 0.015]} />
         
-        <ambientLight intensity={0.05} />
+        <ambientLight intensity={0.2} />
         <Stars radius={150} depth={50} count={2000} factor={4} saturation={0} fade speed={0.3} />
 
         <Player />
@@ -200,9 +203,9 @@ export default function WorldField3D({
           onClick={handleClick}
         >
           <meshStandardMaterial 
-            color="#050505" 
+            color="#080808" 
             map={groundTexture} 
-            opacity={0.8}
+            opacity={0.9}
             transparent
             roughness={1} 
           />
@@ -214,6 +217,9 @@ export default function WorldField3D({
         {graves.map(g => (
           <GraveSign key={g.id} grave={g} onRead={onRead} />
         ))}
+        
+        {/* Extra Atmospheric Dust/Fog Particles */}
+        <Stars radius={50} depth={50} count={1000} factor={2} saturation={0} fade speed={2} />
         
         {/* Instructions */}
         <Html position={[0, -2, 0]} center>
