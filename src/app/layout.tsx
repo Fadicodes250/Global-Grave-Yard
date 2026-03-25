@@ -35,7 +35,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} antialiased`}
     >
       <body className="min-h-screen flex flex-col selection:bg-[#d1d1d1] selection:text-[#050505]">
-        <main className="flex-grow flex flex-col relative w-full h-full overflow-hidden">
+        <main className="flex-grow flex flex-col relative w-full min-h-screen">
           {children}
         </main>
         <Footer />
