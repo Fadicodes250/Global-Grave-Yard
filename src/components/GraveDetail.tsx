@@ -80,7 +80,10 @@ export default function GraveDetail({ grave, onClose, onRate }: GraveDetailProps
                 </div>
               </div>
 
-              <div className="w-full max-h-[40vh] overflow-y-auto custom-scrollbar px-2">
+              <div 
+                className="w-full max-h-[40vh] overflow-y-auto custom-scrollbar px-2 touch-pan-y"
+                onPointerDown={(e) => e.stopPropagation()}
+              >
                 <p className="font-serif text-xl sm:text-2xl leading-relaxed text-[#d1d1d1] italic break-words whitespace-pre-wrap">
                   "{grave.message}"
                 </p>
