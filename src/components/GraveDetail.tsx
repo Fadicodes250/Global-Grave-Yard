@@ -80,9 +80,11 @@ export default function GraveDetail({ grave, onClose, onRate }: GraveDetailProps
                 </div>
               </div>
 
-              <p className="font-serif text-2xl sm:text-3xl leading-snug text-[#d1d1d1] mix-blend-plus-lighter italic">
-                "{grave.message}"
-              </p>
+              <div className="w-full max-h-[40vh] overflow-y-auto custom-scrollbar px-2">
+                <p className="font-serif text-xl sm:text-2xl leading-relaxed text-[#d1d1d1] italic break-words whitespace-pre-wrap">
+                  "{grave.message}"
+                </p>
+              </div>
 
               <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#d1d1d1]/20 to-transparent" />
 

@@ -13,6 +13,20 @@
   --font-serif: var(--font-serif);
 }
 
+.custom-scrollbar::-webkit-scrollbar {
+  width: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(209, 209, 209, 0.1);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(209, 209, 209, 0.3);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
