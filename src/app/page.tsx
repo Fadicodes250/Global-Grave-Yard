@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import SplashScreen from "@/components/SplashScreen";
 import WorldMap from "@/components/WorldMap";
