@@ -379,12 +379,14 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
     let initialZoom = 1;
 
     const handleWheel = (e: WheelEvent) => {
+      if (selectedGrave) return; // Allow modal scrolling
       e.preventDefault();
       const delta = e.deltaY > 0 ? 0.92 : 1.08;
       setTargetZoom(prev => Math.min(Math.max(prev * delta, 0.1), 3));
     };
 
     const handleTouchStart = (e: TouchEvent) => {
+      if (selectedGrave) return;
       if (e.touches.length === 2) {
         setIsPinching(true);
         initialDist = Math.hypot(
@@ -396,6 +398,7 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
     };
 
     const handleTouchMove = (e: TouchEvent) => {
+      if (selectedGrave) return;
       if (e.touches.length === 2) {
         e.preventDefault();
         const dist = Math.hypot(
@@ -429,7 +432,7 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
       container.removeEventListener("touchend", handleTouchEnd);
       container.removeEventListener("touchcancel", handleTouchEnd);
     };
-  }, [targetZoom]);
+  }, [targetZoom, selectedGrave]);
 
   // Spatial helper ...
   const findGraveAt = (worldX: number, worldY: number) => {
