@@ -1,8 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { PointerLockControls, Stars, Html, Plane } from "@react-three/drei";
+import { PointerLockControls, Stars, Html, Plane, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -15,13 +13,48 @@ interface Grave {
   rating_avg: number;
 }
 
+// --- Volumetric Mist Floor ---
+function GroundFog() {
+  const texture = useTexture("/mist.png");
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  
+  const fogPlanes = useRef<THREE.Group>(null);
+  
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime();
+    if (fogPlanes.current) {
+      fogPlanes.current.children.forEach((child, i) => {
+        child.rotation.z = t * (0.02 + i * 0.01);
+        (child as any).material.opacity = 0.15 + Math.sin(t * 0.5 + i) * 0.05;
+      });
+    }
+  });
+
+  return (
+    <group ref={fogPlanes} position={[0, 0.1, 0]}>
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, i * 0.05, 0]}>
+          <planeGeometry args={[1000, 1000]} />
+          <meshStandardMaterial 
+            transparent 
+            alphaMap={texture} 
+            color="#111" 
+            depthWrite={false}
+            opacity={0.2}
+            roughness={1}
+            metalness={0}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 // --- Player/Controls Component ---
 function Player() {
   const { camera } = useThree();
   const moveState = useRef({ forward: false, backward: false, left: false, right: false });
-  const velocity = useRef(new THREE.Vector3());
-  const direction = useRef(new THREE.Vector3());
-
+  
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.code) {
@@ -48,21 +81,17 @@ function Player() {
   }, []);
 
   useFrame((state, delta) => {
-    const speed = 15; // Movement speed
-    velocity.current.set(0, 0, 0);
+    const speed = 12; // Adjusted speed for better "walking" feel
     
-    // Calculate direction relative to camera rotation
     const moveZ = Number(moveState.current.forward) - Number(moveState.current.backward);
     const moveX = Number(moveState.current.right) - Number(moveState.current.left);
     
-    direction.current.set(moveX, 0, -moveZ).normalize();
-
-    if (moveState.current.forward || moveState.current.backward || moveState.current.left || moveState.current.right) {
+    if (moveX !== 0 || moveZ !== 0) {
       camera.translateX(moveX * speed * delta);
       camera.translateZ(-moveZ * speed * delta);
     }
     
-    camera.position.y = 1.7; // Constant head height
+    camera.position.y = 1.7; 
   });
 
   return <PointerLockControls />;
@@ -73,16 +102,16 @@ function GraveSign({ grave, onRead }: { grave: Grave; onRead: (g: Grave) => void
   const [hovered, setHovered] = useState(false);
   
   return (
-    <group position={[grave.x_coord * 10, 0, grave.y_coord * 10]}>
+    <group position={[grave.x_coord * 15, 0, grave.y_coord * 15]}>
       {/* Post */}
       <mesh position={[0, 0.75, 0]}>
-        <cylinderGeometry args={[0.03, 0.05, 1.5]} />
-        <meshStandardMaterial color="#1a1a1a" roughness={0.9} />
+        <cylinderGeometry args={[0.02, 0.04, 1.5]} />
+        <meshStandardMaterial color="#0a0a0a" roughness={1} />
       </mesh>
       
       {/* Plaque */}
       <mesh 
-        position={[0, 1.5, 0.06]} 
+        position={[0, 1.3, 0.05]} 
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
         onClick={(e) => {
@@ -90,25 +119,24 @@ function GraveSign({ grave, onRead }: { grave: Grave; onRead: (g: Grave) => void
           onRead(grave);
         }}
       >
-        <boxGeometry args={[0.7, 0.4, 0.03]} />
-        <meshStandardMaterial color={hovered ? "#333" : "#0f0f0f"} roughness={0.5} />
+        <boxGeometry args={[0.6, 0.35, 0.02]} />
+        <meshStandardMaterial color={hovered ? "#222" : "#050505"} roughness={0.8} />
         
-        {/* Interaction Hint */}
         {hovered && (
-          <Html position={[0, 0.6, 0]} center>
-            <div className="bg-black/90 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full text-white/80 font-mono text-[9px] tracking-[0.2em] uppercase animate-pulse whitespace-nowrap shadow-2xl">
-               Read Memory ({grave.rating_avg.toFixed(1)}★)
+          <Html position={[0, 0.5, 0]} center>
+            <div className="bg-black/90 backdrop-blur-xl border border-white/5 px-4 py-2 rounded-full text-white/50 font-mono text-[8px] tracking-[0.3em] uppercase animate-pulse whitespace-nowrap shadow-2xl">
+               Decrypt Memory ({grave.rating_avg.toFixed(1)}★)
             </div>
           </Html>
         )}
       </mesh>
 
-      {/* Eternal Light Glow */}
+      {/* Soul Glow */}
       <pointLight 
-        position={[0, 1.6, 0.1]} 
-        distance={8} 
-        intensity={grave.rating_avg >= 4 ? 4 : 1.5} 
-        color={grave.rating_avg >= 4 ? "#ffd700" : "#4a90e2"} 
+        position={[0, 1.4, 0.1]} 
+        distance={6} 
+        intensity={grave.rating_avg >= 4 ? 3 : 1} 
+        color={grave.rating_avg >= 4 ? "#ffd700" : "#d1d1d1"} 
       />
     </group>
   );
@@ -126,6 +154,9 @@ export default function WorldField3D({
 }) {
   const [graves, setGraves] = useState<Grave[]>([]);
   const lastClick = useRef(0);
+  const groundTexture = useTexture("/mist.png");
+  groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
+  groundTexture.repeat.set(50, 50);
 
   useEffect(() => {
     const fetchGraves = async () => {
@@ -133,7 +164,7 @@ export default function WorldField3D({
       if (data) setGraves(data as Grave[]);
     };
     fetchGraves();
-    const interval = setInterval(fetchGraves, 15000);
+    const interval = setInterval(fetchGraves, 20000);
     return () => clearInterval(interval);
   }, []);
 
@@ -141,10 +172,8 @@ export default function WorldField3D({
     if (isPlacingGrave) return;
     const now = Date.now();
     if (now - lastClick.current < 400) {
-      // Double click detected on ground
       const { x, z } = e.point;
-      // Convert 3D back to 2D scaled coordinates
-      onBury(x / 10, z / 10);
+      onBury(x / 15, z / 15);
     }
     lastClick.current = now;
   };
@@ -153,38 +182,43 @@ export default function WorldField3D({
     <div className="w-full h-full cursor-crosshair">
       <Canvas 
         shadows 
-        camera={{ position: [0, 1.7, 10], fov: 60 }}
+        camera={{ position: [0, 1.7, 15], fov: 60 }}
         dpr={[1, 2]}
       >
-        <color attach="background" args={["#030303"]} />
-        <fogExp2 attach="fog" args={["#030303", 0.05]} />
+        <color attach="background" args={["#010101"]} />
+        <fogExp2 attach="fog" args={["#010101", 0.06]} />
         
-        <ambientLight intensity={0.1} />
-        <Stars radius={150} depth={50} count={3000} factor={4} saturation={0} fade speed={0.5} />
+        <ambientLight intensity={0.05} />
+        <Stars radius={150} depth={50} count={2000} factor={4} saturation={0} fade speed={0.3} />
 
         <Player />
 
-        {/* The Endless Void (Ground) */}
+        {/* The Endless Void (Ground with subtle mist texture) */}
         <Plane 
           args={[5000, 5000]} 
           rotation={[-Math.PI / 2, 0, 0]} 
           onClick={handleClick}
         >
-          <meshStandardMaterial color="#050505" roughness={1} />
+          <meshStandardMaterial 
+            color="#050505" 
+            map={groundTexture} 
+            opacity={0.8}
+            transparent
+            roughness={1} 
+          />
         </Plane>
         
-        <gridHelper args={[5000, 200, "#111", "#080808"]} position={[0, 0.01, 0]} />
+        <GroundFog />
 
         {/* Render Burial Stones */}
         {graves.map(g => (
           <GraveSign key={g.id} grave={g} onRead={onRead} />
         ))}
         
-        {/* Instructions Overlay */}
-        <Html position={[0, -10, 0]} center>
-           <div className="fixed bottom-10 left-1/2 -translate-x-1/2 pointer-events-none opacity-20 text-white font-mono text-[9px] tracking-[0.5em] uppercase text-center space-y-2">
-              <p>WASD to wander • Double Click to bury</p>
-              <p>Click to lock view • ESC to unlock</p>
+        {/* Instructions */}
+        <Html position={[0, -2, 0]} center>
+           <div className="fixed bottom-10 left-1/2 -translate-x-1/2 pointer-events-none opacity-10 text-white font-mono text-[8px] tracking-[0.5em] uppercase text-center space-y-2">
+              <p>WASD to wander • Double Click ground to bury</p>
            </div>
         </Html>
       </Canvas>
