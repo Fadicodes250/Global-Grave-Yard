@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import { Star, MousePointer2, Compass, Flame } from "lucide-react";
+import AdSenseBanner from "@/components/AdSenseBanner";
 
 const RitualCard = ({ 
   title, 
@@ -128,6 +129,8 @@ export default function GuidePage() {
             Proceed with grace.
           </p>
         </motion.div>
+
+        <AdSenseBanner dataAdSlot="6604671133" className="mt-8 border-t border-[#d1d1d1]/10 pt-16" />
       </main>
     </div>
   );

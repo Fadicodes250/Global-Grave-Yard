@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import { useEffect, useState } from "react";
+import AdSenseBanner from "@/components/AdSenseBanner";
 
 const FadeInText = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => (
   <motion.div
@@ -95,6 +96,8 @@ export default function AboutPage() {
             </div>
           </FadeInText>
         </section>
+
+        <AdSenseBanner dataAdSlot="6604671133" className="mt-24 border-t border-[#d1d1d1]/10 pt-16" />
       </main>
 
       {/* Atmospheric Background Noise/Fog (Optional CSS overlay) */}
