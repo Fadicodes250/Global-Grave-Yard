@@ -36,12 +36,11 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} antialiased`}
     >
       <head>
-        <Script
-          async
+        <script 
+          async 
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6899968908327043"
           crossOrigin="anonymous"
-          strategy="beforeInteractive"
-        />
+        ></script>
       </head>
       <body className="min-h-screen flex flex-col selection:bg-[#d1d1d1] selection:text-[#050505]">
         <main className="flex-grow flex flex-col relative w-full min-h-screen">
