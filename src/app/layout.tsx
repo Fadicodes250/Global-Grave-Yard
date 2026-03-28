@@ -41,27 +41,6 @@ export default function RootLayout({
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6899968908327043"
           crossOrigin="anonymous"
         ></script>
-        <script 
-          async 
-          src="https://quge5.com/88/tag.min.js" 
-          data-zone="224040" 
-          data-cfasync="false"
-        ></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                  }, function(err) {
-                    console.log('ServiceWorker registration failed: ', err);
-                  });
-                });
-              }
-            `,
-          }}
-        />
       </head>
       <body className="min-h-screen flex flex-col selection:bg-[#d1d1d1] selection:text-[#050505]">
         <main className="flex-grow flex flex-col relative w-full min-h-screen">
