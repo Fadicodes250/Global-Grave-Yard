@@ -4,15 +4,29 @@ import { useState } from "react";
 import SplashScreen from "@/components/SplashScreen";
 import WorldMap from "@/components/WorldMap";
 import Navigation from "@/components/Navigation";
+import GuideModal from "@/components/GuideModal";
 
 export default function Home() {
   const [isEntered, setIsEntered] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   return (
     <div className={`relative w-full ${isEntered ? "min-h-screen overflow-y-auto overflow-x-hidden" : "h-screen overflow-hidden"} bg-[#050505]`}>
       {isEntered && <Navigation />}
 
-      {!isEntered && <SplashScreen onEnter={() => setIsEntered(true)} />}
+      {!isEntered && (
+        <SplashScreen 
+          onEnter={() => {
+            setIsEntered(true);
+            setShowGuide(true);
+          }} 
+        />
+      )}
+
+      <GuideModal 
+        isOpen={showGuide} 
+        onClose={() => setShowGuide(false)} 
+      />
 
       <div className="relative w-full h-screen">
         <WorldMap className="absolute inset-0 z-0" />
