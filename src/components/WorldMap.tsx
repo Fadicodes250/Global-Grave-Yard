@@ -28,6 +28,16 @@ interface Particle {
   color: string;
 }
 
+interface Pulse {
+  id: string;
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  life: number;
+  color: string;
+}
+
 export default function WorldMap({ className = "" }: WorldMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -64,6 +74,41 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
   const particlesRef = useRef<Particle[]>([]);
   const trailParticlesRef = useRef<{x: number, y: number, vx: number, vy: number, life: number}[]>([]);
   const fogRef = useRef<{ x: number, y: number, size: number, speed: number, alpha: number }[]>([]);
+  const pulsesRef = useRef<Pulse[]>([]);
+  const shimmerRef = useRef(0);
+
+  // Supabase Realtime Subscription for "The Pulse"
+  useEffect(() => {
+    const channel = supabase
+      .channel('graves_realtime')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'graves' },
+        (payload) => {
+          const newGrave = payload.new as Grave;
+          const oldGrave = payload.old as Grave;
+
+          // Trigger Pulse if rating is high AND it just increased
+          if (newGrave.rating_avg >= 4 && newGrave.rating_avg > (oldGrave.rating_avg || 0)) {
+            pulsesRef.current.push({
+              id: Math.random().toString(),
+              x: newGrave.x_coord,
+              y: newGrave.y_coord,
+              radius: 0,
+              maxRadius: 3000, // Massive global ripple
+              life: 1,
+              color: "255, 215, 0"
+            });
+            shimmerRef.current = 1; // Global shimmer trigger
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Smooth Zoom Interpolation
   useEffect(() => {
@@ -174,11 +219,46 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
       bgGrad.addColorStop(1, "#020202");
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, width, height);
+
+      // Global Shimmer (Background Reaction)
+      if (shimmerRef.current > 0) {
+        ctx.fillStyle = `rgba(255, 215, 0, ${shimmerRef.current * 0.03})`;
+        ctx.fillRect(0, 0, width, height);
+        shimmerRef.current -= 0.015;
+      }
       
       ctx.save();
       ctx.translate(width / 2, height / 2);
       ctx.scale(z, z);
       ctx.translate(-cx, -cy);
+
+      // Global Pulses (Drawn in World Space)
+      const pulses = pulsesRef.current;
+      for (let i = pulses.length - 1; i >= 0; i--) {
+        const p = pulses[i];
+        p.radius += (p.maxRadius - p.radius) * 0.04;
+        p.life -= 0.01;
+
+        if (p.life <= 0) {
+          pulses.splice(i, 1);
+          continue;
+        }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${p.color}, ${p.life * 0.4})`;
+        ctx.lineWidth = 15 / (z + 0.5);
+        ctx.stroke();
+
+        // Secondary ripple
+        if (p.life < 0.8) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius * 0.7, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(${p.color}, ${p.life * 0.2})`;
+          ctx.lineWidth = 5 / (z + 0.5);
+          ctx.stroke();
+        }
+      }
 
       // 2. Grid & Soul Orbs logic
       const gridSize = 140; 
