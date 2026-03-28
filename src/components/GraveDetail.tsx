@@ -24,15 +24,21 @@ export default function GraveDetail({ grave, onClose, onRate }: GraveDetailProps
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasRated, setHasRated] = useState(false);
   const [showSparks, setShowSparks] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     if (!grave) {
       setHasRated(false);
       setShowSparks(false);
+      setImageLoading(true);
+      setImageError(false);
       return;
     }
     const rated = localStorage.getItem(`rated_${grave.id}`);
     setHasRated(!!rated);
+    setImageLoading(true);
+    setImageError(false);
   }, [grave]);
 
   const handleRate = async (rating: number) => {
@@ -81,14 +87,33 @@ export default function GraveDetail({ grave, onClose, onRate }: GraveDetailProps
                 </div>
               </div>
 
-              {grave.image_url && (
-                <div className="w-full relative aspect-square sm:aspect-video rounded-2xl overflow-hidden border border-[#d1d1d1]/10 bg-[#050505] shadow-2xl">
+              {grave.image_url && !imageError && (
+                <div className="w-full relative aspect-square sm:aspect-video rounded-2xl overflow-hidden border border-[#d1d1d1]/10 bg-[#050505] shadow-2xl group">
+                  {imageLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#050505]">
+                      <div className="w-6 h-6 border-2 border-[#d1d1d1]/20 border-t-[#d1d1d1]/80 rounded-full animate-spin" />
+                    </div>
+                  )}
                   <img 
                     src={grave.image_url} 
                     alt="Memory Visual" 
-                    className="w-full h-full object-cover opacity-70 grayscale contrast-125 hover:opacity-90 hover:grayscale-0 transition-all duration-700 ease-in-out"
+                    onLoad={() => setImageLoading(false)}
+                    onError={() => {
+                      setImageLoading(false);
+                      setImageError(true);
+                    }}
+                    className={`w-full h-full object-cover transition-all duration-700 ease-in-out ${
+                      imageLoading ? "opacity-0" : "opacity-70 grayscale contrast-125 group-hover:opacity-90 group-hover:grayscale-0"
+                    }`}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-60" />
+                </div>
+              )}
+
+              {imageError && (
+                <div className="w-full py-10 border border-[#d1d1d1]/5 rounded-2xl bg-red-500/5 flex flex-col items-center gap-2">
+                   <p className="text-[10px] font-mono text-red-500/40 uppercase tracking-widest">Image lost to the void</p>
+                   <p className="text-[8px] font-mono text-[#d1d1d1]/20 uppercase tracking-widest leading-tight px-6">Check your Supabase Storage permissions and Policy (RLS)</p>
                 </div>
               )}
 
