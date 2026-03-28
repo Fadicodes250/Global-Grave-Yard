@@ -1,30 +1,74 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import { Spade } from "lucide-react";
+import { useState, useRef } from "react";
+import { Spade, Camera, X } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
 
 interface GraveModalProps {
   isOpen: boolean;
   x: number;
   y: number;
   onClose: () => void;
-  onSubmit: (message: string) => Promise<void>;
+  onSubmit: (message: string, imageUrl?: string) => Promise<void>;
 }
 
 export default function GraveModal({ isOpen, x, y, onClose, onSubmit }: GraveModalProps) {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Image must be smaller than 2MB");
+        return;
+      }
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
 
     setIsSubmitting(true);
-    await onSubmit(message);
-    setIsSubmitting(false);
-    setMessage("");
-    onClose();
+    let imageUrl = "";
+
+    try {
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('grave-attachments')
+          .upload(filePath, selectedFile);
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+        } else {
+          const { data } = supabase.storage
+            .from('grave-attachments')
+            .getPublicUrl(filePath);
+          imageUrl = data.publicUrl;
+        }
+      }
+
+      await onSubmit(message, imageUrl);
+      setMessage("");
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      onClose();
+    } catch (err) {
+      console.error("Submission failed:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -70,11 +114,52 @@ export default function GraveModal({ isOpen, x, y, onClose, onSubmit }: GraveMod
                   className="w-full bg-[#050505] border border-[#d1d1d1]/10 rounded-xl p-4 text-[#d1d1d1] placeholder:text-[#d1d1d1]/30 focus:outline-none focus:border-[#d1d1d1]/40 transition-colors resize-none font-serif text-base sm:text-lg leading-relaxed mix-blend-plus-lighter"
                 />
 
+                <div className="w-full">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  
+                  {previewUrl ? (
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-[#d1d1d1]/20 bg-[#050505] group">
+                      <img 
+                        src={previewUrl} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedFile(null);
+                          setPreviewUrl(null);
+                        }}
+                        className="absolute top-2 right-2 p-1.5 bg-[#050505]/60 hover:bg-[#050505] rounded-full text-white/70 hover:text-white transition-all border border-white/10"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full flex items-center justify-center gap-3 py-4 border border-[#d1d1d1]/10 border-dashed rounded-xl text-[#d1d1d1]/30 hover:text-[#d1d1d1]/60 hover:border-[#d1d1d1]/30 hover:bg-[#d1d1d1]/5 transition-all text-sm tracking-widest uppercase"
+                    >
+                      <Camera size={18} strokeWidth={1.5} />
+                      Attach a fleeting image
+                    </button>
+                  )}
+                </div>
+
                 <div className="flex gap-4 w-full">
                   <button
                     type="button"
                     onClick={() => {
                       setMessage("");
+                      setSelectedFile(null);
+                      setPreviewUrl(null);
                       onClose();
                     }}
                     className="flex-1 py-3 px-6 rounded-xl border border-[#d1d1d1]/10 text-[#d1d1d1]/60 text-sm tracking-widest uppercase hover:bg-[#d1d1d1]/5 transition-colors"

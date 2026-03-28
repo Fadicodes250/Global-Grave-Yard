@@ -17,6 +17,7 @@ interface Grave {
   tended_count: number;
   rating_avg: number;
   rating_count: number;
+  image_url?: string;
 }
 
 interface Particle {
@@ -680,10 +681,18 @@ export default function WorldMap({ className = "" }: WorldMapProps) {
         x={modalState.x}
         y={modalState.y}
         onClose={() => setModalState({ ...modalState, isOpen: false })}
-        onSubmit={async (msg) => {
+        onSubmit={async (msg, imageUrl) => {
           const { data, error } = await supabase
             .from("graves")
-            .insert([{ x_coord: modalState.x, y_coord: modalState.y, message: msg, tended_count: 0, rating_avg: 0, rating_count: 0 }])
+            .insert([{ 
+              x_coord: modalState.x, 
+              y_coord: modalState.y, 
+              message: msg, 
+              image_url: imageUrl,
+              tended_count: 0, 
+              rating_avg: 0, 
+              rating_count: 0 
+            }])
             .select().single();
           if (!error && data) setGraves(prev => [...prev, data as Grave]);
         }}

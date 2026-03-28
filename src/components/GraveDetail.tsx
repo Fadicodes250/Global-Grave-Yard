@@ -10,6 +10,7 @@ interface GraveData {
   tended_count: number;
   rating_avg: number;
   rating_count: number;
+  image_url?: string;
 }
 
 interface GraveDetailProps {
@@ -79,6 +80,17 @@ export default function GraveDetail({ grave, onClose, onRate }: GraveDetailProps
                   Average: {grave.rating_avg.toFixed(1)} ({grave.rating_count})
                 </div>
               </div>
+
+              {grave.image_url && (
+                <div className="w-full relative aspect-square sm:aspect-video rounded-2xl overflow-hidden border border-[#d1d1d1]/10 bg-[#050505] shadow-2xl">
+                  <img 
+                    src={grave.image_url} 
+                    alt="Memory Visual" 
+                    className="w-full h-full object-cover opacity-70 grayscale contrast-125 hover:opacity-90 hover:grayscale-0 transition-all duration-700 ease-in-out"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-60" />
+                </div>
+              )}
 
               <div 
                 className="w-full max-h-[40vh] overflow-y-auto custom-scrollbar px-2 touch-pan-y"
