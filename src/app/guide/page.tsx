@@ -91,30 +91,54 @@ export default function GuidePage() {
             delay={0.1}
             icon={MousePointer2}
             title="How to Bury"
-            description="Find an empty spot on the map. Double-click to create a new light. Anything you write is anonymous and will stay here forever."
+            description="Find a quiet spot on the endless field. Double-click to plant a new soul orb. You are invited to leave a secret, a regret, or a hope. Your words are anonymous and will be guarded by the fog forever. We recommend being as honest as possible; the void does not judge, it only remembers."
           />
           <RitualCard 
             delay={0.2}
             orbColor="255, 215, 0"
             icon={Compass}
             title="The Compass"
-            description="The small needle at the top left points toward the most liked memories. Follow the trail of dust to find the lights that people loved the most."
+            description="The golden needle at the top left is your guide through the darkness. It points toward the nearest highly-rated burials that have resonated with our community. If you find yourself lost, follow the trail of ghostly dust particles; they will lead you toward the most profound memories in the field."
           />
           <RitualCard 
             delay={0.3}
             orbColor="255, 255, 255"
             icon={Star}
-            title="Give Stars"
-            description="If you like someone's message, give it stars. Highly rated lights will change from blue to a bright gold or white glow."
+            title="Star Tributes"
+            description="If a message moves you, grant it a star. These tributes are more than just likes; they feed the light of the soul orb. As a burial gathers stars, it grows brighter, turning from a cold blue to a brilliant, flickering gold. Your appreciation ensures that the most impactful stories are never lost to the deep fog."
           />
           <RitualCard 
             delay={0.4}
             orbColor="255, 100, 100"
             icon={Flame}
-            title="Tend the Field"
-            description="Messages stay alive when people visit them. Frequent visits and ratings keep the lights from fading away into the fog. Keep exploring to keep the memories alive."
+            title="Tending the Field"
+            description="A memory only dies when it is forgotten. By visiting a burial, reading its inscription, and leaving a rating, you are 'tending' the field. This collective act of remembrance prevents the lights from fading. The more a spot is visited, the stronger its presence becomes in the digital afterlife."
           />
         </div>
+
+        {/* Community Guidelines */}
+        <section className="mt-32 max-w-4xl mx-auto border-t border-white/5 pt-24">
+          <h2 className="font-serif text-3xl text-white mb-12">Universal Guidelines</h2>
+          <div className="space-y-12 font-serif text-lg leading-relaxed opacity-70">
+            <p>
+              The Global Graveyard is a sanctuary for authentic human expression. To maintain the solemnity of the field, we ask all travelers to observe several core principles:
+            </p>
+            <ul className="space-y-6 list-disc pl-6 italic">
+              <li>
+                <strong>Respect the Silence:</strong> While we encourage honesty, we do not permit hate speech, harassment, or explicit threats. The void is a place for release, not for causing harm to others.
+              </li>
+              <li>
+                <strong>Anonymity is Sacred:</strong> Do not post personal identifying information about yourself or others. The power of this place comes from the freedom of being unknown.
+              </li>
+              <li>
+                <strong>Authenticity Matters:</strong> This is a place for real feelings. We discourage spam or commercial messages. Let every light represent a real moment of human existence.
+              </li>
+            </ul>
+            <p>
+              By participating in the burial ritual, you agree to these standards. The Caretaker reserves the right to fade any lights that violate the peace of the graveyard.
+            </p>
+          </div>
+        </section>
 
         {/* Footer Note */}
         <motion.div 
