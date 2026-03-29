@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import { Star, MousePointer2, Compass, Flame } from "lucide-react";
 import AdSenseBanner from "@/components/AdSenseBanner";
+import { CPMContainerAd } from "@/components/CPMAds";
 
 const RitualCard = ({ 
   title, 
@@ -115,6 +116,8 @@ export default function GuidePage() {
             description="A memory only dies when it is forgotten. By visiting a burial, reading its inscription, and leaving a rating, you are 'tending' the field. This collective act of remembrance prevents the lights from fading. The more a spot is visited, the stronger its presence becomes in the digital afterlife."
           />
         </div>
+
+        <CPMContainerAd />
 
         {/* Community Guidelines */}
         <section className="mt-32 max-w-4xl mx-auto border-t border-white/5 pt-24">

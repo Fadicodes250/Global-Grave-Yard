@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Navigation from "@/components/Navigation";
 import { useEffect, useState } from "react";
 import AdSenseBanner from "@/components/AdSenseBanner";
+import { CPMBannerAd, CPMRedirectLink } from "@/components/CPMAds";
 
 const FadeInText = ({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) => (
   <motion.div
@@ -73,6 +74,8 @@ export default function AboutPage() {
               This field was not built for data or algorithms. It was built for the quiet moments in the middle of the night when you need to say something that can't be said to a friend, a partner, or a screen that knows your name. It is a sanctuary for the unspoken, an archive of the heart, and a tribute to the beautiful complexity of the people we pass on the street every day.
             </p>
           </FadeInText>
+          
+          <CPMBannerAd />
         </section>
 
         {/* Divider */}
@@ -100,6 +103,8 @@ export default function AboutPage() {
               the things we felt and shared will still be here, shining in the dark."
             </p>
           </FadeInText>
+
+          <CPMRedirectLink className="mt-8" />
 
           <FadeInText delay={0.4}>
             <div className="mt-16 flex items-center gap-4">
