@@ -5,9 +5,11 @@ import SplashScreen from "@/components/SplashScreen";
 import WorldMap from "@/components/WorldMap";
 import Navigation from "@/components/Navigation";
 import GuideModal from "@/components/GuideModal";
+import WelcomeAdsModal from "@/components/WelcomeAdsModal";
 
 export default function Home() {
   const [isEntered, setIsEntered] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
 
   return (
@@ -18,10 +20,18 @@ export default function Home() {
         <SplashScreen 
           onEnter={() => {
             setIsEntered(true);
-            setShowGuide(true);
+            setShowWelcome(true);
           }} 
         />
       )}
+
+      <WelcomeAdsModal 
+        isOpen={showWelcome} 
+        onClose={() => {
+          setShowWelcome(false);
+          setShowGuide(true);
+        }} 
+      />
 
       <GuideModal 
         isOpen={showGuide} 

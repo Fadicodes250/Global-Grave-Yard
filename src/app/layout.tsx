@@ -41,8 +41,9 @@ export default function RootLayout({
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6899968908327043"
           crossOrigin="anonymous"
         ></script>
-        {/* CPM Network Global Script */}
+        {/* CPM Network Global Scripts */}
         <script src="https://pl29006726.profitablecpmratenetwork.com/de/8f/09/de8f09524e140399029e60d7a7396fb7.js"></script>
+        <script src="https://pl29006879.profitablecpmratenetwork.com/6f/06/a4/6f06a42372f302310110d613b6c6e5dc.js"></script>
       </head>
       <body className="min-h-screen flex flex-col selection:bg-[#d1d1d1] selection:text-[#050505]">
         <main className="flex-grow flex flex-col relative w-full min-h-screen">
