@@ -9,18 +9,18 @@ import WelcomeAdsModal from "@/components/WelcomeAdsModal";
 
 export default function Home() {
   const [isEntered, setIsEntered] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
   const [showGuide, setShowGuide] = useState(false);
 
   return (
     <div className={`relative w-full ${isEntered ? "min-h-screen overflow-y-auto overflow-x-hidden" : "h-screen overflow-hidden"} bg-[#050505]`}>
       {isEntered && <Navigation />}
 
-      {!isEntered && (
+      {!isEntered && !showWelcome && (
         <SplashScreen 
           onEnter={() => {
             setIsEntered(true);
-            setShowWelcome(true);
+            setShowGuide(true);
           }} 
         />
       )}
@@ -29,7 +29,6 @@ export default function Home() {
         isOpen={showWelcome} 
         onClose={() => {
           setShowWelcome(false);
-          setShowGuide(true);
         }} 
       />
 
